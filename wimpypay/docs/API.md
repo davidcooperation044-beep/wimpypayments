@@ -29,6 +29,49 @@ import { getTransactions } from '../src/wallet/getTransactions';
 const transactions = await getTransactions();
 ```
 
+## External server-to-server wallet charging
+
+### chargeWallet
+Charges a user's WimpyPay wallet from another Wimpy product over a server-to-server endpoint. This is for trusted backend integrations only and must never be called from a browser.
+
+Request:
+
+```http
+POST /api/external/charge-wallet
+x-internal-api-key: <shared-secret>
+Content-Type: application/json
+
+{
+  "user_id": "uuid",
+  "amount": 2500,
+  "currency": "NGN",
+  "reference": "product-purchase-001",
+  "description": "WimpyID premium feature"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "transaction_reference": "product-purchase-001",
+  "new_balance": 7500,
+  "currency": "NGN"
+}
+```
+
+Failure:
+
+```json
+{
+  "ok": false,
+  "error": "insufficient-funds"
+}
+```
+
+This endpoint validates a shared secret against `WIMPYPAY_INTERNAL_API_KEY`, deducts the wallet balance atomically, inserts a `charge` transaction, and sends a best-effort receipt email to the user.
+
 ## Subscription helpers
 
 ### createPlan

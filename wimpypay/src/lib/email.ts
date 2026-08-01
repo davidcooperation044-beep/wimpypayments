@@ -5,7 +5,7 @@ export interface SendReceiptEmailInput {
   userId: string;
   toEmail: string;
   toName?: string;
-  type: 'wallet_funding' | 'subscription';
+  type: 'wallet_funding' | 'subscription' | 'external_purchase';
   amount: number;
   currency: string;
   reference: string;
@@ -13,6 +13,7 @@ export interface SendReceiptEmailInput {
   planName?: string;
   nextBillingDate?: string;
   balance?: number;
+  description?: string;
 }
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://wimpypay.example.com';
@@ -153,13 +154,18 @@ export async function sendReceiptEmail(input: SendReceiptEmailInput) {
       ? `<p style="margin:0 0 24px;font-size:20px;color:#C9A227;font-family:Georgia, 'Times New Roman', serif;">${amountLabel}</p>
           <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#23262E;">Your wallet has been funded successfully.</p>
           <p style="margin:0 0 6px;font-size:14px;color:#23262E;"><strong>New wallet balance:</strong> ${formatAmount(input.balance ?? 0, input.currency)}</p>`
-      : `<p style="margin:0 0 18px;font-size:16px;color:#23262E;line-height:1.7;">Your subscription is now active.</p>
-          <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Plan:</strong> ${input.planName || 'Subscription'}</p>
-          <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Charged:</strong> ${amountLabel}</p>
-          <p style="margin:0;font-size:14px;color:#23262E;"><strong>Next billing date:</strong> ${input.nextBillingDate ? formatDate(input.nextBillingDate) : 'N/A'}</p>`;
+      : input.type === 'external_purchase'
+        ? `<p style="margin:0 0 18px;font-size:16px;color:#23262E;line-height:1.7;">A purchase was charged to your wallet.</p>
+            <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Purchase:</strong> ${input.description || 'External purchase'}</p>
+            <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Charged:</strong> ${amountLabel}</p>
+            <p style="margin:0;font-size:14px;color:#23262E;"><strong>Remaining balance:</strong> ${formatAmount(input.balance ?? 0, input.currency)}</p>`
+        : `<p style="margin:0 0 18px;font-size:16px;color:#23262E;line-height:1.7;">Your subscription is now active.</p>
+            <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Plan:</strong> ${input.planName || 'Subscription'}</p>
+            <p style="margin:0 0 8px;font-size:14px;color:#23262E;"><strong>Charged:</strong> ${amountLabel}</p>
+            <p style="margin:0;font-size:14px;color:#23262E;"><strong>Next billing date:</strong> ${input.nextBillingDate ? formatDate(input.nextBillingDate) : 'N/A'}</p>`;
 
-  const title = input.type === 'wallet_funding' ? 'Payment Received' : 'Subscription Confirmed';
-  const subtitle = input.type === 'wallet_funding' ? 'Your Wimpy Pay wallet has been funded' : `Your ${input.planName || 'Subscription'} subscription is active`;
+  const title = input.type === 'wallet_funding' ? 'Payment Received' : input.type === 'external_purchase' ? 'Purchase Charged' : 'Subscription Confirmed';
+  const subtitle = input.type === 'wallet_funding' ? 'Your Wimpy Pay wallet has been funded' : input.type === 'external_purchase' ? 'Your wallet was charged for a purchase' : `Your ${input.planName || 'Subscription'} subscription is active`;
   const html = buildEmailHtml(input, title, subtitle, detailsHtml);
   const resend = new Resend(RESEND_API_KEY);
 
