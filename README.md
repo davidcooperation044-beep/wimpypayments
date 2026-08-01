@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-# wimpypayments
-=======
+
 # Wimpy ID and Wimpy Pay
 
 This repository now contains two standalone services that can run independently while sharing one Supabase project.
