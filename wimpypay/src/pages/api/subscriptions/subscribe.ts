@@ -67,11 +67,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     'charge_wallet_and_activate_subscription',
     {
       wallet_id: wallet.id,
-      user_id: user.id,
-      plan_id: plan.id,
+      subscriber_user_id: user.id,
+      selected_plan_id: plan.id,
       amount: chargeAmount,
       provider_reference: chargeReference,
-      current_period_end: currentPeriodEnd,
+      subscription_period_end: currentPeriodEnd,
     }
   );
 
