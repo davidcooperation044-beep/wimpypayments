@@ -63,42 +63,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const chargeAmount = Number(plan.price || 0);
   const chargeReference = `subscription-${user.id}-${Date.now()}`;
 
-  const { data: updatedWallet, error: updateError } = await serviceSupabase
-    .from('wallets')
-    .update({ balance: Number(wallet.balance || 0) - chargeAmount })
-    .eq('id', wallet.id)
-    .select('id, balance')
-    .single();
-
-  if (updateError) {
-    return res.status(500).json({ ok: false, error: updateError.message });
-  }
-
-  const { error: transactionError } = await serviceSupabase.from('transactions').insert({
-    wallet_id: updatedWallet.id,
-    type: 'subscription',
-    amount: chargeAmount,
-    status: 'success',
-    provider_reference: chargeReference,
-  });
-
-  if (transactionError) {
-    return res.status(500).json({ ok: false, error: transactionError.message });
-  }
-
-  const { data: subscription, error: subscriptionError } = await serviceSupabase
-    .from('subscriptions')
-    .insert({
+  const { data: subscription, error: subscriptionError } = await serviceSupabase.rpc(
+    'charge_wallet_and_activate_subscription',
+    {
+      wallet_id: wallet.id,
       user_id: user.id,
       plan_id: plan.id,
-      status: 'active',
+      amount: chargeAmount,
+      provider_reference: chargeReference,
       current_period_end: currentPeriodEnd,
-    })
-    .select()
-    .single();
+    }
+  );
 
-  if (subscriptionError) {
-    return res.status(500).json({ ok: false, error: subscriptionError.message });
+  if (subscriptionError || !subscription) {
+    const errorMessage = subscriptionError?.message || 'subscription-failed';
+    return res.status(500).json({ ok: false, error: errorMessage });
   }
 
   return res.status(200).json({ ok: true, subscription });
