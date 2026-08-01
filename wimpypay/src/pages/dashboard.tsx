@@ -35,17 +35,40 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Dashboard</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p><strong>Balance:</strong> {balance}</p>
-      <p><strong>Paystack webhook URL:</strong> {webhookUrl}</p>
-      <p>Open the admin page to inspect wallet and transaction updates after each webhook event.</p>
-      <ul>
-        {transactions.map((transaction) => (
-          <li key={transaction.id}>{transaction.type} - {transaction.amount} - {transaction.status}</li>
-        ))}
-      </ul>
-    </div>
+    <main className="page-shell">
+      <div className="page-card">
+        <header className="page-header">
+          <h1 className="brand-title">Dashboard</h1>
+          <p className="page-copy">Your ledger snapshot and recent payment activity.</p>
+        </header>
+
+        {error && <p className="form-message error">{error}</p>}
+
+        <div>
+          <p className="ledger-balance">₦{balance.toFixed(2)}</p>
+          <p className="page-copy">Current wallet balance</p>
+        </div>
+
+        <div className="content-card" style={{ marginTop: 24 }}>
+          <p className="page-copy">
+            <strong>Paystack webhook URL:</strong> {webhookUrl}
+          </p>
+          <p className="page-copy">Open the admin page to inspect wallet and transaction updates after each webhook event.</p>
+        </div>
+
+        <section style={{ marginTop: 24 }}>
+          <h2 style={{ marginBottom: 16 }}>Recent transactions</h2>
+          <ul className="transaction-list">
+            {transactions.map((transaction) => (
+              <li key={transaction.id} className="transaction-row">
+                <span className="transaction-col">{new Date(transaction.created_at).toLocaleDateString()}</span>
+                <span className="transaction-col">{transaction.type}</span>
+                <span className="transaction-amount">₦{transaction.amount.toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </main>
   );
 }

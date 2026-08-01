@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { createServiceSupabase } from '../../../lib/supabaseClient';
+import { sendReceiptEmail } from '../../../lib/email';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -36,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: plan, error: planError } = await serviceSupabase
     .from('plans')
-    .select('id, price')
+    .select('id, price, name')
     .eq('id', plan_id)
     .maybeSingle();
 
@@ -78,6 +79,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (subscriptionError || !subscription) {
     const errorMessage = subscriptionError?.message || 'subscription-failed';
     return res.status(500).json({ ok: false, error: errorMessage });
+  }
+
+  try {
+    const { data: userData, error: userError } = await serviceSupabase.auth.admin.getUserById(user.id);
+    if (userError) {
+      console.error('Unable to load user for subscription receipt email:', userError);
+    } else if (!userData?.user?.email) {
+      console.warn('Receipt email skipped: user has no email on file', user.id);
+    } else {
+      await sendReceiptEmail({
+        userId: user.id,
+        toEmail: userData.user.email,
+        toName: userData.user.user_metadata?.full_name || undefined,
+        type: 'subscription',
+        amount: chargeAmount,
+        currency: wallet.balance ? 'NGN' : 'NGN',
+        reference: chargeReference,
+        date: new Date().toISOString(),
+        planName: plan.name || 'Subscription',
+        nextBillingDate: currentPeriodEnd,
+      });
+    }
+  } catch (emailError) {
+    console.error('Failed to send subscription receipt email:', emailError);
   }
 
   return res.status(200).json({ ok: true, subscription });

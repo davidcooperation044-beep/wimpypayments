@@ -1,0 +1,294 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --color-navy: #0F1B33;
+  --color-parchment: #EDE6D6;
+  --color-gold: #C9A227;
+  --color-ink: #23262E;
+  --color-green: #3E8E63;
+  --color-rust: #B4402C;
+  --radius-card: 8px;
+  --shadow: 0 24px 80px rgba(15, 27, 51, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-navy);
+  color: var(--color-ink);
+}
+
+body,
+input,
+button,
+textarea,
+select {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+body {
+  background: var(--color-navy);
+}
+
+button,
+a,
+input {
+  transition: all 0.2s ease;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(201, 162, 39, 0.85);
+  outline-offset: 3px;
+}
+
+.page-shell {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-navy);
+}
+
+.page-card,
+.content-card {
+  width: min(100%, 440px);
+  background: var(--color-parchment);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  border: 1px solid rgba(15, 27, 51, 0.08);
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.brand-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2rem, 4vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.page-copy {
+  margin: 16px 0 0;
+  color: rgba(35, 38, 46, 0.85);
+  line-height: 1.6;
+}
+
+.form-grid,
+.profile-grid,
+.plan-grid {
+  display: grid;
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(35, 38, 46, 0.18);
+  border-radius: 6px;
+  background: white;
+  color: var(--color-ink);
+}
+
+.button {
+  border: none;
+  padding: 14px 16px;
+  font-weight: 700;
+  border-radius: 6px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.button-primary {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+.button-secondary {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid rgba(35, 38, 46, 0.24);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-message {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.form-message.error {
+  color: var(--color-rust);
+}
+
+.form-message.success {
+  color: var(--color-green);
+}
+
+.status-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--color-green);
+}
+
+.status-line.error {
+  color: var(--color-rust);
+}
+
+.seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.15);
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--color-ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.leger-balance,
+.ledger-balance {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0;
+  color: var(--color-ink);
+}
+
+.transaction-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.transaction-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 0.8fr;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 6px;
+  background: rgba(237, 230, 214, 0.65);
+  align-items: center;
+}
+
+.transaction-row:nth-child(odd) {
+  background: rgba(237, 230, 214, 0.84);
+}
+
+.transaction-col {
+  font-size: 0.95rem;
+  color: rgba(35, 38, 46, 0.9);
+}
+
+.transaction-amount {
+  font-family: 'IBM Plex Mono', monospace;
+  text-align: right;
+}
+
+.plan-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.plan-card {
+  padding: 22px;
+  border-radius: 8px;
+  background: rgba(237, 230, 214, 0.9);
+  border: 1px solid rgba(35, 38, 46, 0.12);
+}
+
+.plan-title {
+  margin: 0 0 12px;
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+}
+
+.plan-price {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.5rem;
+  margin: 0 0 16px;
+}
+
+.plan-actions {
+  margin-top: 12px;
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table th,
+.simple-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(35, 38, 46, 0.12);
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.simple-table th {
+  font-weight: 700;
+}
+
+@media (max-width: 500px) {
+  .page-card,
+  .content-card {
+    width: 100%;
+    padding: 24px;
+  }
+
+  .transaction-row {
+    grid-template-columns: 1fr;
+  }
+
+  .transaction-amount {
+    text-align: left;
+  }
+}

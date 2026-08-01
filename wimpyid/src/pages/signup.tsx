@@ -19,14 +19,64 @@ export default function SignupPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Sign up</h1>
-      <input placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button type="submit">Sign up</button>
-      <button type="button" onClick={() => loginWithGoogle().catch(() => setMessage('Google sign-in failed'))}>Sign in with Google</button>
-      <p>{message}</p>
-    </form>
+    <main className="page-shell">
+      <div className="page-card">
+        <header className="page-header">
+          <h1 className="brand-title">WimpyID</h1>
+          <p className="page-copy">Create your identity passport and manage verified access.</p>
+        </header>
+
+        <form className="form-grid" onSubmit={handleSubmit}>
+          <label>
+            Full name
+            <input
+              type="text"
+              placeholder="Full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+          </label>
+
+          <label>
+            Email
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              type="password"
+              placeholder="Create a password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+
+          <button type="submit" className="button button-primary">
+            Sign Up
+          </button>
+
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => loginWithGoogle().catch(() => setMessage('Google sign-in failed'))}
+          >
+            Sign in with Google
+          </button>
+
+          {message ? (
+            <p className={`form-message ${message.includes('failed') ? 'error' : 'success'}`}>{message}</p>
+          ) : null}
+        </form>
+      </div>
+    </main>
   );
 }

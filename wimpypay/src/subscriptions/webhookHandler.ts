@@ -1,4 +1,5 @@
 import { createServiceSupabase } from '../lib/supabaseClient';
+import { sendReceiptEmail } from '../lib/email';
 
 const serviceSupabase = createServiceSupabase();
 
@@ -32,7 +33,7 @@ export async function webhookHandler(payload: unknown) {
   let wallet = null;
   const { data: existingWallet, error: walletError } = await serviceSupabase
     .from('wallets')
-    .select('id, user_id, balance')
+    .select('id, user_id, balance, currency')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -44,7 +45,7 @@ export async function webhookHandler(payload: unknown) {
     const { data: createdWallet, error: createError } = await serviceSupabase
       .from('wallets')
       .insert({ user_id: userId, balance: 0, currency: 'NGN' })
-      .select('id, user_id, balance')
+      .select('id, user_id, balance, currency')
       .single();
 
     if (createError) throw createError;
@@ -72,6 +73,29 @@ export async function webhookHandler(payload: unknown) {
     status: 'success',
     provider_reference: reference,
   });
+
+  try {
+    const { data: userData, error: userError } = await serviceSupabase.auth.admin.getUserById(userId);
+    if (userError) {
+      console.error('Unable to load user for receipt email:', userError);
+    } else if (!userData?.user?.email) {
+      console.warn('Receipt email skipped: user has no email on file', userId);
+    } else {
+      await sendReceiptEmail({
+        userId,
+        toEmail: userData.user.email,
+        toName: userData.user.user_metadata?.full_name || undefined,
+        type: 'wallet_funding',
+        amount,
+        currency: wallet.currency || 'NGN',
+        reference,
+        date: new Date().toISOString(),
+        balance: nextBalance,
+      });
+    }
+  } catch (emailError) {
+    console.error('Failed to send wallet funding receipt email:', emailError);
+  }
 
   return { ok: true, balance: nextBalance };
 }

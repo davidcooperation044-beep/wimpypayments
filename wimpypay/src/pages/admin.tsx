@@ -56,33 +56,74 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Admin: Webhook & Wallet Inspector</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p><strong>Paystack webhook URL:</strong> {webhookUrl}</p>
-      <p>Use this URL in your Paystack dashboard as the webhook URL for successful charges.</p>
+    <main className="page-shell">
+      <div className="page-card">
+        <header className="page-header">
+          <h1 className="brand-title">Admin: Webhook & Wallet Inspector</h1>
+          <p className="page-copy">A utilitarian view of wallets and transactions for internal review.</p>
+        </header>
 
-      <h2>Wallets</h2>
-      {loading ? <p>Loading...</p> : (
-        <ul>
-          {wallets.map((wallet) => (
-            <li key={wallet.id}>
-              <strong>{wallet.user_id}</strong> — balance {wallet.balance} {wallet.currency} — updated {wallet.updated_at}
-            </li>
-          ))}
-        </ul>
-      )}
+        {error && <p className="form-message error">{error}</p>}
 
-      <h2>Transactions</h2>
-      {loading ? <p>Loading...</p> : (
-        <ul>
-          {transactions.map((transaction) => (
-            <li key={transaction.id}>
-              {transaction.type} | {transaction.amount} | {transaction.status} | {transaction.provider_reference || 'n/a'} | {transaction.created_at}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        <div className="content-card">
+          <p><strong>Paystack webhook URL:</strong> {webhookUrl}</p>
+          <p>Use this URL in your Paystack dashboard as the webhook URL for successful charges.</p>
+        </div>
+
+        <section style={{ marginTop: 24 }}>
+          <h2>Wallets</h2>
+          {loading ? <p>Loading...</p> : (
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Balance</th>
+                  <th>Currency</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wallets.map((wallet) => (
+                  <tr key={wallet.id}>
+                    <td>{wallet.user_id}</td>
+                    <td>₦{wallet.balance.toFixed(2)}</td>
+                    <td>{wallet.currency}</td>
+                    <td>{new Date(wallet.updated_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section style={{ marginTop: 24 }}>
+          <h2>Transactions</h2>
+          {loading ? <p>Loading...</p> : (
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Reference</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((transaction) => (
+                  <tr key={transaction.id}>
+                    <td>{transaction.type}</td>
+                    <td>₦{transaction.amount.toFixed(2)}</td>
+                    <td>{transaction.status}</td>
+                    <td>{transaction.provider_reference || 'n/a'}</td>
+                    <td>{new Date(transaction.created_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
