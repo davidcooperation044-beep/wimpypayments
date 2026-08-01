@@ -1,34 +1,52 @@
 import { useEffect, useState } from 'react';
-import { createPlan } from '../subscriptions/createPlan';
+import { supabase } from '../lib/supabaseClient';
 import { subscribe } from '../subscriptions/subscribe';
 
 export default function PlansPage() {
-  const [plan, setPlan] = useState<any>(null);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function bootstrap() {
-      const created = await createPlan({
-        product_name: 'test-product',
-        name: 'Demo Plan',
-        price: 1000,
-        billing_interval: 'monthly',
-      });
-      setPlan(created);
+    async function loadPlans() {
+      const { data, error } = await supabase.from('plans').select('*');
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setPlans(data || []);
     }
 
-    bootstrap();
+    loadPlans();
   }, []);
 
-  async function handleSubscribe() {
-    if (!plan) return;
-    await subscribe({ plan_id: plan.id });
+  async function handleSubscribe(planId: string) {
+    try {
+      await subscribe({ plan_id: planId });
+      alert('Subscription activated successfully');
+    } catch (subscribeError) {
+      const message = subscribeError instanceof Error ? subscribeError.message : 'Subscription failed';
+      setError(message);
+    }
   }
 
   return (
     <div>
       <h1>Plans</h1>
-      {plan ? <p>{plan.name} - {plan.price}</p> : <p>Loading...</p>}
-      <button onClick={handleSubscribe}>Subscribe</button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {plans.length === 0 ? (
+        <p>No subscription plans are available yet. Admin users can create plans in the admin panel.</p>
+      ) : (
+        <ul>
+          {plans.map((plan) => (
+            <li key={plan.id}>
+              <strong>{plan.name}</strong> — {plan.price}
+              <button onClick={() => handleSubscribe(plan.id)} style={{ marginLeft: 12 }}>
+                Subscribe
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

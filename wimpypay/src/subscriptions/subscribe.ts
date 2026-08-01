@@ -5,16 +5,19 @@ export interface SubscribeInput {
 }
 
 export async function subscribe({ plan_id }: SubscribeInput) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('User not authenticated');
 
-  const { data, error } = await supabase.from('subscriptions').insert({
-    user_id: user.id,
-    plan_id,
-    status: 'active',
-    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-  }).select().single();
+  const response = await fetch('/api/subscriptions/subscribe', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ plan_id }),
+  });
 
-  if (error) throw error;
-  return data;
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Subscription failed');
+  return data.subscription;
 }

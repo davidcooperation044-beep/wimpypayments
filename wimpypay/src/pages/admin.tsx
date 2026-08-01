@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 interface WalletRow {
   id: string;
@@ -23,12 +24,28 @@ export default function AdminPage() {
   const [wallets, setWallets] = useState<WalletRow[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const response = await fetch('/api/admin/inspect');
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session;
+      if (!session?.access_token) {
+        setError('Please sign in to access admin data.');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/inspect', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
       const result = await response.json();
+      if (!response.ok) {
+        setError(result.error || 'Failed to load admin data');
+      }
       setWebhookUrl(result.webhookUrl || '');
       setWallets(result.wallets || []);
       setTransactions(result.transactions || []);
@@ -41,6 +58,7 @@ export default function AdminPage() {
   return (
     <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
       <h1>Admin: Webhook & Wallet Inspector</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <p><strong>Paystack webhook URL:</strong> {webhookUrl}</p>
       <p>Use this URL in your Paystack dashboard as the webhook URL for successful charges.</p>
 

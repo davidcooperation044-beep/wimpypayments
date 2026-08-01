@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { login } from '../auth/login';
+import { loginWithGoogle } from '../auth/loginWithGoogle';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ export default function LoginPage() {
       <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Login</button>
+      <button type="button" onClick={() => loginWithGoogle().catch(() => setMessage('Google sign-in failed'))}>Sign in with Google</button>
       <p>{message}</p>
     </form>
   );

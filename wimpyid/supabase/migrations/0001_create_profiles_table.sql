@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   full_name text,
   phone text,
   avatar_url text,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

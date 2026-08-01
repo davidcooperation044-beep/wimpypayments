@@ -35,7 +35,7 @@ const http = require('http');
   const signature = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY).update(body).digest('hex');
   const req = http.request({
     hostname: '127.0.0.1',
-    port: 3010,
+    port: 3001,
     path: '/api/webhook/payments',
     method: 'POST',
     headers: {
