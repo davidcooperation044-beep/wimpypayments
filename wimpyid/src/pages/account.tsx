@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { logout } from '../auth/logout';
 import { getProfile } from '../profile/getProfile';
 import { updateProfile } from '../profile/updateProfile';
+import { buildTokenHandoffRedirect, isExternalRedirect } from '../lib/redirect';
 import SealBadge from '../components/SealBadge';
 
 export default function AccountPage() {
@@ -17,6 +19,29 @@ export default function AccountPage() {
         setProfile(data);
         setFullName(data?.full_name || '');
         setPhone(data?.phone || '');
+
+        const storedRedirect = window.sessionStorage.getItem('wimpyid-post-login-redirect');
+        if (storedRedirect) {
+          window.sessionStorage.removeItem('wimpyid-post-login-redirect');
+          const isExternal = isExternalRedirect(storedRedirect);
+
+          if (isExternal) {
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (session?.access_token && session?.refresh_token) {
+              window.location.href = buildTokenHandoffRedirect(
+                storedRedirect,
+                session.access_token,
+                session.refresh_token
+              );
+              return;
+            }
+          } else {
+            window.location.href = storedRedirect;
+            return;
+          }
+        }
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Failed to load profile');
       }

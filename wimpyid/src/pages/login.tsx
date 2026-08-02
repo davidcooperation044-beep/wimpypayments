@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { login } from '../auth/login';
 import { loginWithGoogle } from '../auth/loginWithGoogle';
+import { buildTokenHandoffRedirect, getAppUrl, isExternalRedirect } from '../lib/redirect';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,8 +17,16 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await login({ email, password });
-      window.location.href = redirectTo || `${process.env.NEXT_PUBLIC_APP_URL}/account`;
+      const result = await login({ email, password });
+      const target = redirectTo || `${getAppUrl()}/account`;
+      const isExternal = isExternalRedirect(redirectTo);
+
+      if (isExternal && result?.session) {
+        const { access_token, refresh_token } = result.session;
+        window.location.href = buildTokenHandoffRedirect(target, access_token, refresh_token);
+      } else {
+        window.location.href = target;
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Login failed');
     }
@@ -61,7 +70,14 @@ export default function LoginPage() {
           <button
             type="button"
             className="button button-secondary"
-            onClick={() => loginWithGoogle(redirectTo || undefined).catch(() => setMessage('Google sign-in failed'))}
+            onClick={() => {
+              if (redirectTo) {
+                window.sessionStorage.setItem('wimpyid-post-login-redirect', redirectTo);
+              } else {
+                window.sessionStorage.removeItem('wimpyid-post-login-redirect');
+              }
+              loginWithGoogle().catch(() => setMessage('Google sign-in failed'));
+            }}
           >
             Sign in with Google
           </button>

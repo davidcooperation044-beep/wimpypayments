@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { signup } from '../auth/signup';
 import { loginWithGoogle } from '../auth/loginWithGoogle';
+import { isExternalRedirect } from '../lib/redirect';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -17,7 +18,20 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await signup({ email, password, fullName, redirectTo: redirectTo || undefined });
+      const isExternal = isExternalRedirect(redirectTo);
+
+      if (redirectTo && isExternal) {
+        window.sessionStorage.setItem('wimpyid-post-login-redirect', redirectTo);
+      } else {
+        window.sessionStorage.removeItem('wimpyid-post-login-redirect');
+      }
+
+      await signup({
+        email,
+        password,
+        fullName,
+        redirectTo: redirectTo && !isExternal ? redirectTo : undefined,
+      });
       setMessage('Signup successful. Check your email for verification.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Signup failed');
@@ -73,7 +87,14 @@ export default function SignupPage() {
           <button
             type="button"
             className="button button-secondary"
-            onClick={() => loginWithGoogle(redirectTo || undefined).catch(() => setMessage('Google sign-in failed'))}
+            onClick={() => {
+              if (redirectTo) {
+                window.sessionStorage.setItem('wimpyid-post-login-redirect', redirectTo);
+              } else {
+                window.sessionStorage.removeItem('wimpyid-post-login-redirect');
+              }
+              loginWithGoogle().catch(() => setMessage('Google sign-in failed'));
+            }}
           >
             Sign in with Google
           </button>
