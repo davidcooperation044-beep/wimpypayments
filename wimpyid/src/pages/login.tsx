@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { login } from '../auth/login';
 import { loginWithGoogle } from '../auth/loginWithGoogle';
 
@@ -6,12 +6,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    setRedirectTo(redirect);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       await login({ email, password });
-      setMessage('Login successful');
+      window.location.href = redirectTo || `${process.env.NEXT_PUBLIC_APP_URL}/account`;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Login failed');
     }
@@ -55,7 +61,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="button button-secondary"
-            onClick={() => loginWithGoogle().catch(() => setMessage('Google sign-in failed'))}
+            onClick={() => loginWithGoogle(redirectTo || undefined).catch(() => setMessage('Google sign-in failed'))}
           >
             Sign in with Google
           </button>

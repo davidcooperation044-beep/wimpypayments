@@ -11,5 +11,9 @@ export async function getProfile() {
     .single();
 
   if (error) throw error;
-  return data;
+  return {
+    ...data,
+    email: user.email,
+    email_confirmed_at: user.email_confirmed_at,
+  };
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { logout } from '../auth/logout';
 import { getProfile } from '../profile/getProfile';
 import { updateProfile } from '../profile/updateProfile';
+import SealBadge from '../components/SealBadge';
 
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -50,7 +51,13 @@ export default function AccountPage() {
         <div className="profile-grid">
           <div>
             <p className="status-line">
-              {profile?.email ? 'Email verified' : 'Email not verified'}
+              {profile?.email_confirmed_at ? (
+                <>
+                  Email verified <SealBadge />
+                </>
+              ) : (
+                'Email not verified'
+              )}
             </p>
             <p>{profile?.email || 'No profile loaded'}</p>
           </div>
