@@ -60,6 +60,10 @@ export default function LoginPage() {
             Sign in with Google
           </button>
 
+          <p>
+            <a href="/reset-password" className="link">Forgot password?</a>
+          </p>
+
           {message ? <p className={`form-message ${message.includes('failed') ? 'error' : 'success'}`}>{message}</p> : null}
         </form>
       </div>

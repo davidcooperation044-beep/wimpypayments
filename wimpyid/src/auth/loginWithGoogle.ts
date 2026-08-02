@@ -1,10 +1,10 @@
 import { supabase } from '../lib/supabaseClient';
 
-export async function loginWithGoogle() {
+export async function loginWithGoogle(redirectTo?: string) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account`,
+      redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account`,
     },
   });
 
