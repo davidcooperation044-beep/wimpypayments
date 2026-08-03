@@ -72,6 +72,89 @@ Failure:
 
 This endpoint validates a shared secret against `WIMPYPAY_INTERNAL_API_KEY`, deducts the wallet balance atomically, inserts a `charge` transaction, and sends a best-effort receipt email to the user.
 
+## External server-to-server subscription helpers
+
+### getPlan
+Returns plan pricing details for a product plan so other Wimpy products can display accurate pricing without hardcoding values.
+
+Request:
+
+```http
+GET /api/external/plan?product_name=<product>&plan_name=<plan>
+x-internal-api-key: <shared-secret>
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "plan": {
+    "id": "plan-id",
+    "product_name": "wimpybooks",
+    "name": "Premium",
+    "price": 2500,
+    "billing_interval": "monthly"
+  }
+}
+```
+
+Failure:
+
+```json
+{
+  "ok": false,
+  "error": "plan-not-found"
+}
+```
+
+### subscribeToPlan
+Subscribes a user to a plan using wallet funds and the shared internal API key. This endpoint looks up the plan by `product_name` and `plan_name`, charges the user's WimpyPay wallet atomically, activates the subscription, and sends a receipt email.
+
+Request:
+
+```http
+POST /api/external/subscribe
+x-internal-api-key: <shared-secret>
+Content-Type: application/json
+
+{
+  "user_id": "uuid",
+  "product_name": "wimpybooks",
+  "plan_name": "Premium",
+  "reference": "wimpybooks-subscription-001"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "subscription": {
+    "subscription_id": "subscription-uuid",
+    "subscription_user_id": "uuid",
+    "subscription_plan_id": "plan-id",
+    "subscription_status": "active",
+    "subscription_current_period_end": "2026-09-03T...",
+    "subscription_created_at": "2026-08-03T..."
+  }
+}
+```
+
+Failure:
+
+```json
+{
+  "ok": false,
+  "error": "insufficient-funds",
+  "requiredAmount": 2500,
+  "currentBalance": 1500
+}
+```
+
+This endpoint is server-to-server only and requires `WIMPYPAY_INTERNAL_API_KEY` for authorization.
+
 ## Subscription helpers
 
 ### createPlan
