@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ ok: false, error: 'invalid-session' });
   }
 
-  const { amount } = req.body as { amount?: number };
+  const { amount, return_url } = req.body as { amount?: number; return_url?: string };
   if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
     return res.status(400).json({ ok: false, error: 'invalid-amount' });
   }
@@ -38,7 +38,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const reference = `wallet-${data.user.id}-${Date.now()}`;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
-  const callbackUrl = `${appUrl}/dashboard?funding=pending&reference=${encodeURIComponent(reference)}`;
+  const callbackUrl = return_url
+    ? `${return_url}${return_url.includes('?') ? '&' : '?'}funding=pending&reference=${encodeURIComponent(reference)}`
+    : `${appUrl}/dashboard?funding=pending&reference=${encodeURIComponent(reference)}`;
 
   const serviceSupabase = createServiceSupabase();
   const { data: userData, error: userError } = await serviceSupabase.auth.admin.getUserById(data.user.id);
