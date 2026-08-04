@@ -3,6 +3,7 @@ export interface PaymentProviderChargeInput {
   currency?: string;
   email?: string;
   reference?: string;
+  callbackUrl?: string;
 }
 
 export interface PaymentProviderChargeResult {
@@ -24,6 +25,7 @@ export class PaymentProvider {
         amount: Math.round(input.amount * 100),
         currency: input.currency || 'NGN',
         reference: input.reference || `paystack-${Date.now()}`,
+        callback_url: input.callbackUrl,
       }),
     });
 

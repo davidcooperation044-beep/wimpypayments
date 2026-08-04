@@ -2,17 +2,26 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getBalance } from '../wallet/getBalance';
 import { getTransactions } from '../wallet/getTransactions';
+import { fundWallet } from '../wallet/fundWallet';
 
 export default function DashboardPage() {
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [webhookUrl, setWebhookUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [fundingAmount, setFundingAmount] = useState('500');
+  const [fundingPending, setFundingPending] = useState(false);
+  const [fundingBanner, setFundingBanner] = useState<string | null>(null);
+  const [isFunding, setIsFunding] = useState(false);
+
+  async function loadWalletData() {
+    setBalance(await getBalance());
+    setTransactions(await getTransactions());
+  }
 
   useEffect(() => {
     async function load() {
-      setBalance(await getBalance());
-      setTransactions(await getTransactions());
+      await loadWalletData();
       const { data } = await supabase.auth.getSession();
       const session = data?.session;
       if (!session?.access_token) {
@@ -34,6 +43,65 @@ export default function DashboardPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fundingParam = params.get('funding');
+    const reference = params.get('reference');
+
+    if (fundingParam === 'pending' && reference) {
+      setFundingPending(true);
+      setFundingBanner('Payment received, confirming with your bank…');
+
+      const startedAt = Date.now();
+      const timer = window.setInterval(async () => {
+        await loadWalletData();
+        const latestTransactions = await getTransactions();
+        const hasMatchingReference = latestTransactions.some((txn: any) => txn.provider_reference === reference);
+        if (hasMatchingReference) {
+          window.clearInterval(timer);
+          setFundingBanner(null);
+          setFundingPending(false);
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete('funding');
+          nextUrl.searchParams.delete('reference');
+          window.history.replaceState({}, '', nextUrl.toString());
+          return;
+        }
+
+        if (Date.now() - startedAt > 30000) {
+          window.clearInterval(timer);
+          setFundingBanner('Still processing — refresh in a moment.');
+          setFundingPending(false);
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete('funding');
+          nextUrl.searchParams.delete('reference');
+          window.history.replaceState({}, '', nextUrl.toString());
+        }
+      }, 2000);
+
+      return () => window.clearInterval(timer);
+    }
+  }, []);
+
+  async function handleFundWallet(e: React.FormEvent) {
+    e.preventDefault();
+    setIsFunding(true);
+    setError(null);
+
+    try {
+      const amount = Number(fundingAmount);
+      if (!Number.isFinite(amount) || amount < 100) {
+        throw new Error('Enter a funding amount of at least ₦100');
+      }
+
+      const result = await fundWallet({ amount, provider: 'paystack' });
+      window.location.href = result.authorizationUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Funding failed');
+      setIsFunding(false);
+    }
+  }
+
   return (
     <main className="page-shell">
       <div className="page-card">
@@ -43,6 +111,24 @@ export default function DashboardPage() {
         </header>
 
         {error && <p className="form-message error">{error}</p>}
+        {fundingBanner && <p className="form-message success">{fundingBanner}</p>}
+
+        <form onSubmit={handleFundWallet} style={{ marginTop: 24, marginBottom: 24 }}>
+          <label>
+            Amount (NGN)
+            <input
+              type="number"
+              min="100"
+              step="0.01"
+              value={fundingAmount}
+              onChange={(e) => setFundingAmount(e.target.value)}
+              style={{ display: 'block', width: '100%', marginTop: 8, marginBottom: 12 }}
+            />
+          </label>
+          <button type="submit" className="button button-primary" disabled={isFunding}>
+            {isFunding ? 'Preparing checkout…' : 'Fund wallet'}
+          </button>
+        </form>
 
         <div>
           <p className="ledger-balance">₦{balance.toFixed(2)}</p>
